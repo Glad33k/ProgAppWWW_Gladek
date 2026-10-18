@@ -1,0 +1,61 @@
+:root{
+    --kolor-tekstu:#000000;
+    --kolor-fokusu:#ff0000;
+}
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    color:var(--kolor-tekstu);
+}
+
+header,main,footer{
+    max-width:1100px;
+    margin: 0 auto;
+    padding: 15px;
+}
+
+nav ul{
+    display:flex;
+    flex-wrap:wrap;
+    gap:15px;
+    padding:0;
+}
+
+.katalog-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:20px;
+}
+
+.karta-produktu{
+    border:1px solid #ccc;
+    padding: 10px;
+}
+
+img{
+    max-width:100%;
+    height:auto;
+}
+
+input,select,textarea{
+    width:100%;
+    max-width:100%;
+}
+
+a:hover, button:hover{
+    background-color: #eeeeee;
+}
+
+a:focus-visible, button:focus-visible{
+    outline:3px solid var(--kolor-fokusu);
+    outline-offset:2px;
+}
+
+@media(min-width:768px){
+    .katalog-grid{
+        grid-template-columns: repeat(3,1fr); 
+       }
+}

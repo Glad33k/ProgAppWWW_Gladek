@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Piłki - Kontakt</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/main.js" defer></script>
+</head>
+<body>
+    <header>
+        <h1>Formularz kontaktowy</h1>
+        <div class="nawigacja">
+        <nav>
+            <ul>
+                <li><a href="index.html">Strona główna</a></li>
+                <li><a href="produkt.html">Produkt</a></li>
+                <li><a href="kontakt.html" aria-current="page">Kontakt</a></li>
+            </ul>
+            </nav>
+        <button type="button" id="przycisk-motyw" aria-pressed="false">Ciemny motyw</button>
+        </div>
+    </header>
+    <main>
+    <p>Podgląd lokalny. Formularz nie wysyła wiadomości.</p>
+    
+    <form id="formularz-kontaktowy" method="get" action="kontakt.html">
+        <div>
+            <label for="pole-email">Twój adres e-mail (wymagane):</label>
+            <input type="email" id="pole-email" name="email" required>
+        </div>
+        <div>
+            <label for="pole-produkt">Wybierz produkt (wymagane):</label>
+            <select id="pole-produkt" name="produkt" required>
+                <option value="">Wybierz produkt</option>
+                <option value="1">Piłka do piłki nożnej</option>
+                <option value="2">Piłka do baseballa</option>
+                <option value="3">Piłka do tenisa ziemnego</option>
+            </select>
+        </div>
+        <div>
+            <label for="pole-ilosc">Liczba sztuk (1-5, wymagane):</label>
+            <input type="number" id="pole-ilosc" name="ilosc" required min="1" max="5" step="1">
+        </div>
+
+        <p id="cena-podglad" style="font-weight: bold; margin: 5px 0;">Wybierz produkt i ilość, aby zobaczyć cenę.</p>
+
+        <div>
+            <label for="pole-wiadomosc">Treść wiadomości (10-500 znaków, wymagane):</label>
+            <textarea id="pole-wiadomosc" name="wiadomosc" required minlength="10" maxlength="500"></textarea>
+            <p id="blad-wiadomosci" hidden style="color: #FF0000; text-shadow: 0 0 10px #FF0000, 0 0 20px #FF3333; margin: 0;">Wiadomość musi mieć minimum 10 znaków.</p>
+        </div>
+        <div>
+            <button type="submit">Sprawdź zapytanie</button>
+        </div>
+    </form>
+
+    <div id="podsumowanie-wysylki" hidden style="margin-top: 20px; padding: 10px; border: 1px solid var(--kolor-ramki);">
+        <h3>Podsumowanie zapytania</h3>
+        <p id="podsumowanie-dane"></p>
+        <p id="podsumowanie-wiadomosc"></p>
+    </div>
+</main>
+    <footer>
+        <p>Piłki - sklep</p>
+    </footer>
+</body>
+</html>

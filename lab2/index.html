@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Piłki - Strona Główna</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/main.js" defer></script>
+</head>
+<body>
+    <header>
+        <div class="naglowek-gora">
+        <h1>Witam w sklepie z piłkami</h1>
+        <div class="panel-zegara" style="margin-bottom: 20px;">
+    <p id="zegar-wyswietlacz">Ładowanie czasu...</p>
+    <button type="button" id="btn-start">Start zegara</button>
+    <button type="button" id="btn-stop">Stop zegara</button>
+</div>
+    </div>
+        <div class="nawigacja">
+        <nav>
+            <ul>
+                <li><a href="index.html" aria-current="page">Strona główna</a></li>
+                <li><a href="produkt.html">Produkt</a></li>
+                <li><a href="kontakt.html">Kontakt</a></li>
+            </ul>
+        </nav>
+        <button type="button" id="przycisk-motyw" aria-pressed="false">Ciemny motyw</button>
+        </div>
+    </header>
+    <main>
+        <div class="wyszukiwarka-kontener">
+    <label for="wyszukiwarka-produktow">Szukaj produktu:</label>
+    <input type="search" id="wyszukiwarka-produktow" placeholder="Wpisz nazwę...">
+    <div aria-live="polite" id="obszar-statusu">
+        <p id="licznik-wynikow">Znaleziono produktów: 3</p>
+        <p id="brak-wynikow" hidden>Brak produktów spełniających kryteria wyszukiwania.</p>
+    </div>
+</div>
+        <h2>Katalog produktów</h2>
+        <div class="katalog-grid">
+            <article class="karta-produktu">
+                <a href="produkt.html">
+                    <img src="img/ball.png" alt="Piłka do piłki nożnej" width="256" height="256">
+                    <h3>Piłka do piłki nożnej</h3>
+                    <p>Piłka czarno-biała do piłki nożnej</p>
+                    <p class="cena">19.99zł</p>
+                </a>
+            </article>
+
+            <article class="karta-produktu">
+            <img src="img/tennis.png" alt="Piłka tenisowa" width="256" height="256">
+            <h3>Piłka do tenisa</h3>
+            <p>Żółta piłka do tenisa ziemnego</p>
+            <p class="cena">9.99zł</p>
+            </article>
+
+            <article class="karta-produktu">
+                <img src="img/baseball.png" alt="Piłka do kosza" width="256" height="256">
+                <h3>Piłka do baseballa</h3>
+                <p>Biała piłka do baseballa</p>
+                <p class="cena">24.99zł</p>
+            </article>
+        </div>
+    </main>
+    <footer>
+        <p>Piłki - sklep</p>
+    </footer>
+    
+</body>
+</html>

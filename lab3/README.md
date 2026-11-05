@@ -1,28 +1,45 @@
+# Laboratorium 3 - Animacje jQuery i środowisko PHP
+
 ## Instrukcja uruchomienia
-1. Pobierz lub sklonuj folder z projektem na dysk lokalny
-2. w konsoli przejdź do folderu z projektem (...\lab2)
-3. Wpisz polecenie python -m http.server 8000
-4. Odpal stronę localhost:8000 na przeglądarce
+1. Projekt wymaga lokalnego serwera Apache. Zainstaluj pakiet XAMPP.
+2. Skopiuj cały folder projektu (`lab3`) do katalogu `htdocs` w miejscu instalacji XAMPP (np. `C:\xampp\htdocs\lab3`).
+3. Uruchom moduł Apache w panelu kontrolnym XAMPP.
+4. Otwórz przeglądarkę i wpisz adres: `http://localhost/lab3/` (lub odpowiedni, jeśli port Apache został zmieniony).
 
-### 1. Wyszukiwarka produktów (index.html)
-* **Zdarzenie:** Wystąpienie zdarzenia `input` na polu tekstowym `<input type="search">`.
-* **Dane wejściowe:** Wartość wpisana przez użytkownika pobrana przez `event.target.value`. Następuje oczyszczenie ze skrajnych spacji i ujednolicenie wielkości liter.
-* **Obliczenie:** Skrypt iteruje po pobranej kolekcji kart produktów. Z każdej karty wyciąga tytuł i sprawdza za pomocą metody, czy zawiera on szukaną frazę.
-* **Zmiana DOM:** W zależności od wyniku porównania, skrypt zmienia atrybut `hidden` kart. Następnie wstrzykuje przez `textContent` nową wartość do licznika wyników oraz ewentualnie odkrywa komunikat o braku dopasowań.
+## Wersja biblioteki jQuery
+W projekcie wykorzystano pełną, lokalną wersję biblioteki **jQuery 4.0.0** (`vendor/jquery-4.0.0.min.js`).
 
-### 2. Formularz kontaktowy i kalkulator cen (kontakt.html)
-* **Zdarzenie:** `change` na polu wyboru produktu, `input` na polu ilości oraz `submit` na całym formularzu. Zdarzenie `submit` jest przechwytywane przez `event.preventDefault()`, co blokuje wysłanie danych na serwer i przeładowanie strony.
-* **Dane wejściowe:** ID wybranego produktu z listy `<select>`, ilość sztuk z pola `<input type="number">` oraz tekst z pola `<textarea>`.
-* **Obliczenie:**
-  * Rzutowanie ilości na typ liczbowy.
-  * Weryfikacja, czy liczba jest całkowita i mieści się w przedziale od 1 do 5.
-  * Pobranie ceny produktu z lokalnej tablicy obiektów, gdzie cena zapisana jest w formacie całkowitym (w groszach).
-  * Wywołanie niezależnej od drzewa DOM funkcji `obliczWartosc(cenaGrosze, ilosc)`, zwracającej całkowity iloczyn.
-  * Sprawdzenie długości tekstu wiadomości po wywołaniu `trim()`.
-* **Zmiana DOM:** Wyświetlenie błędów walidacji w przypadku niepoprawnych danych i wymuszenie aktywności pola przez `.focus()`. Dla poprawnych danych, przeliczenie groszy na złotówki, sformatowanie kwoty za pomocą `Intl.NumberFormat` i wstrzyknięcie pełnego podsumowania do elementu podsumowującego, używając bezpiecznego `textContent` zapobiegającego atakom XSS.
+## Pseudokody animacji
 
-### 3. Zegar (index.html)
-* **Zdarzenie:** Wywołanie funkcji `setInterval` przy starcie strony lub kliknięciu przycisku "Start", wywołującej funkcję aktualizującą co 1000 ms. Przycisk "Stop" wywołuje `clearInterval`.
-* **Dane wejściowe:** Obiekt systemowego czasu wywoływany w każdej pętli jako `new Date()`.
-* **Obliczenie:** Sformatowanie czasu z wykorzystaniem `Intl.DateTimeFormat`.
-* **Zmiana DOM:** Podmiana zawartości tekstowej `textContent` w akapicie wyświetlacza zegara na nowo wygenerowany ciąg znaków, co nadpisuje starą wartość w czasie rzeczywistym.
+**Animacja A (Powiększenie po kliknięciu):**
+1. Utwórz zmienną logiczną stanu (stanA = false).
+2. Po kliknięciu odwróć stan i zaktualizuj aria-pressed.
+3. Zatrzymaj kolejkę trwających animacji przez .stop(true, false).
+4. Animuj wymiary do 240x130 (jeśli true) lub powrót do 160x90 (jeśli false) w czasie 300 ms.
+
+**Animacja B (Powiększenie po najechaniu i fokusie):**
+1. Utwórz zmienne logiczne dla hover i focus.
+2. Przy zdarzeniach mouseenter/mouseleave/focus/blur aktualizuj odpowiedni stan.
+3. Wywołaj funkcję sprawdzającą: jeśli którykolwiek ze stanów jest aktywny, animuj powiększenie (220x120px). W przeciwnym razie przywróć wymiary bazowe.
+4. Użyj .stop(true, false) przed .animate() by uniknąć kolejkowania przy szybkich ruchach.
+
+**Animacja C (Wzrost z każdym kliknięciem):**
+1. Utwórz zmienną liczącą kroki (kroki = 0).
+2. Przy kliknięciu zablokuj działanie, jeśli element jest w trakcie animacji używając .is(':animated').
+3. Zablokuj działanie, jeśli licznik kroków >= 5.
+4. Zwiększ licznik kroków, zaktualizuj tekst w role="status".
+5. Wylicz docelowe wymiary ze stałych bazowych (szer + kroki * 20, wys + kroki * 10) i uruchom animację.
+
+## Wyniki testów
+
+| Próba | Rzeczywisty wynik po testach |
+| :--- | :--- |
+| **Szybkie kliknięcia A** | Brak kolejkowania. Szybkie kliknięcia kończą się płynnie w stanie adekwatnym do ich liczby, dzięki .stop(true, false). |
+| **Kursor i fokus B** | Usunięcie kursora przy wciśniętym fokusie nie zmniejsza obiektu. Dopiero utrata obu stanów przywraca wymiar bazowy. Brak kolejkowania. |
+| **Limit i reset C** | 5 kliknięć osiąga poprawnie 260x140 px. Kolejne kliknięcia są ignorowane. Użycie resetu natychmiast przywraca 160x90 px. |
+| **Klawiatura i ruch** | Nawigacja klawiszem Tab dociera do przycisków. Enter/Spacja działają. Emulacja `prefers-reduced-motion: reduce` natychmiast wyłącza animacje (zmiany stają się skokowe, funkcjonalność zostaje zachowana). |
+
+### Wyniki testów AJAX (Sprawdź serwer)
+1. **Prawidłowe żądanie:** Metoda GET, kod odpowiedzi: 200 OK. Wyświetla się tekst "PHP działa".
+2. **Brak pliku na serwerze:** Zmiana nazwy pliku powoduje w zakładce Network błąd 404 (Not Found). Na ekranie pojawia się przewidziany w `.fail()` komunikat o błędzie.
+3. **Wolne 3G:** Podczas ładowania przycisk staje się nieaktywny (disabled), a na ekranie widnieje napis "Ładowanie...". Po otrzymaniu odpowiedzi przycisk jest odblokowywany.

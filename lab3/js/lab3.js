@@ -118,3 +118,27 @@ $('#btn-reset').on('click',function(){
         height: '90px'
     });
 });
+
+$('#btn-ajax').on('click',function(e){
+    e.preventDefault();
+    const $przycisk=$(this);
+    const $obszarWyniku = $('#status-ajax');
+
+    $przycisk.prop('disabled',true);
+    $obszarWyniku.text('Ładowanie...')
+    $.ajax({
+        url:'status.php',
+        method: 'GET',
+        dataType: 'text',
+        timeout: 5000
+    })
+    .done(function(odpowiedz){
+        $obszarWyniku.text(odpowiedz);
+    })
+    .fail(function(){
+        $obszarWyniku.text('Wystąpił błąd, nie udało połączyć się z serwerem')
+    })
+    .always(function(){
+        $przycisk.prop('disabled',false);
+    });
+});

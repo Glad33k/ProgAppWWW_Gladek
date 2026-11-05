@@ -1,0 +1,32 @@
+#demo-jquery{
+    margin-bottom: 30px; 
+    padding: 20px; 
+    border: 1px solid var(--kolor-ramki);
+}
+
+#demo-jquery .kontener-animacji {
+    display: flex;
+    flex-wrap: wrap; 
+    gap: 15px;
+    align-items: flex-start;
+}
+
+
+#demo-jquery .przycisk-anim {
+    width: 160px;
+    height: 90px;
+    box-sizing: border-box; 
+    background-color: var(--kolor-tla, #333);
+    color: var(--kolor-tekstu, #fff);
+    border: 1px solid #666;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+#demo-jquery .przycisk-anim:focus {
+    outline: 3px solid #ffcc00; 
+}

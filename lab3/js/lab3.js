@@ -45,3 +45,24 @@ $('#anim-b').on('mouseenter', function(){
     stanBFocus = false;
     aktualizujB();
 });
+
+let kroki=0;
+const bazowaSzer = 160;
+const bazowaWys = 90;
+
+$('#anim-c').on('click',function(){
+    if($(this).is(':animated')){
+        return;
+    }
+    if(kroki>= 5) {
+        return;
+    }
+    kroki++;
+    $('#status-anim-c').text('Kroków: ' + kroki);
+    const nowaSzerokosc= bazowaSzer + (kroki*20);
+    const nowaWysokosc = bazowaWys + (kroki*10);
+    $(this).animate({
+        width: nowaSzerokosc + 'px',
+        height: nowaWysokosc + 'px'
+    },300);
+});

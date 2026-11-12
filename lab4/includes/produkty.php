@@ -1,28 +1,27 @@
-<?php 
-
-$produkty = [
+<?php
+    $produkty = [
     [
         'id' => 1,
-        'nazwa' => 'Piłka do piłki nożnej',
-        'opis' => 'Piłka czarno-biała do piłki nożnej',
-        'cena' => 19.99,
-        'zdjecie' => 'img/ball.png',
-        'alt' => 'Piłka do piłki nożnej'
+        'nazwa' => 'Wiedźmin: Ostatnie życzenie',
+        'kategoria' => 'ksiazki',
+        'stan' => 0   // Wymóg: stan 0
     ],
     [
         'id' => 2,
-        'nazwa' => 'Piłka do tenisa',
-        'opis' => 'Żółta piłka do tenisa ziemnego',
-        'cena' => 9.99,
-        'zdjecie' => 'img/tennis.png',
-        'alt' => 'Piłka tenisowa'
+        'nazwa' => 'Lampka do czytania LED',
+        'kategoria' => 'akcesoria',
+        'stan' => 1   // Wymóg: stan dokładnie 1
     ],
     [
         'id' => 3,
-        'nazwa' => 'Piłka do baseballa',
-        'opis' => 'Biała piłka do baseballa',
-        'cena' => 24.99,
-        'zdjecie' => 'img/baseball.png',
-        'alt' => 'Piłka do baseballa'
+        'nazwa' => 'Pan Tadeusz',
+        'kategoria' => 'ksiazki',
+        'stan' => 12  // Wymóg: stan powyżej 5
+    ],
+    [
+        'id' => 4,
+        'nazwa' => 'Zakładka magnetyczna',
+        'kategoria' => 'akcesoria',
+        'stan' => 7   // Wymóg: stan powyżej 5
     ]
 ];

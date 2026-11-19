@@ -1,58 +1,69 @@
+# Laboratorium 5 – Wspólny szablon, routing podstron PHP i multimedia
+
+Rozbudowa projektu o jednolity szablon układu w `index.php`, dynamiczne dołączanie treści podstron na podstawie białej listy (`$mapaPodstron`) oraz parametru `$_GET['idp']`, obsługę kodów błędów HTTP (`404` oraz `500`), a także responsywną podstronę z osadzonymi materiałami wideo (`iframe`).
+
+
+Przed wydzieleniem wspólnego szablonu skopiowano katalog `lab4` do `htdocs/lab5` i zweryfikowano jego poprawne działanie pod adresem `http://localhost/lab5/index.html` oraz `http://localhost/lab5/lab4.php`:
+- **Filtr katalogu (`GET`):** Wybór kategorii poprawnie zawęża listę produktów.
+- **Zapis wyboru (`POST` + Sesja):** Wysłanie formularza zwraca `POST 303`, a następnie `GET 200` i zapisuje wybór w `$_SESSION['ostatni_wybor']`.
+- **Żądanie AJAX (`status.php`):** Asynchroniczne zapytanie na stronie głównej zwraca status `200 OK` i aktualizuje komunikat w DOM.
+
+
+
+### Adresy aplikacji
+- **Strona główna:** `http://localhost/lab5/index.php` (lub `http://localhost/lab5/index.php?idp=glowna`)
+- **Podstrona produktu:** `http://localhost/lab5/index.php?idp=produkt`
+- **Podstrona kontaktowa:** `http://localhost/lab5/index.php?idp=kontakt`
+- **Podstrona z filmami:** `http://localhost/lab5/index.php?idp=filmy`
+- **Katalog PHP (Lab 4):** `http://localhost/lab5/lab4.php`
+- **Endpoint AJAX:** `http://localhost/lab5/status.php`
+
 ## Instrukcja uruchomienia
 
-1. Skopiuj katalog `lab4` do folderu `htdocs` w instalacji **XAMPP** (domyślnie `C:\xampp\htdocs\lab4`).
-2. Uruchom panel sterowania XAMPP i włącz moduł **Apache**.
-3. Otwórz przeglądarkę i przejdź pod adres:
-   - Strona główna: `http://localhost/lab4/`
-   - Katalog PHP: `http://localhost/lab4/lab4.php`
+1. Umieść katalog `lab5` w folderze `htdocs` serwera **XAMPP** (`C:\xampp\htdocs\lab5`).
+2. Uruchom usługę **Apache** w panelu sterowania XAMPP.
+3. Otwórz w przeglądarce adres `http://localhost/lab5/index.php`.
 
-## Pseudokod działania `lab4.php`
+## Pseudokod działania index.php
 
 ```text
 START
-  1. Wywołaj session_start() przed wysłaniem jakichkolwiek danych HTML.
-  2. Wczytaj tablicę $produkty za pomocą require_once (__DIR__ . '/includes/produkty.php').
-  3. Ustaw domyślny filtr = 'wszystkie' oraz puste komunikaty błędów.
-
-  4. JEŻELI w $_GET istnieje 'kategoria' TO:
-       JEŻELI wartość jest tekstem i należy do ['wszystkie', 'ksiazki', 'akcesoria'] TO:
-         filtr = $_GET['kategoria']
+  1. Zdefiniuj zmienną $idProjektu oraz tablicę $mapaPodstron (biała lista: klucz => [etykieta, tytul, plik]).
+  2. Odczytaj parametr $_GET['idp'] przed wysłaniem jakichkolwiek danych HTML:
+       JEŻELI brak $_GET['idp'] LUB $_GET['idp'] === '' TO:
+         aktywnyIdp = 'glowna'
+       W PRZECIWNYM RAZIE JEŻELI $_GET['idp'] jest tekstem ORAZ istnieje w $mapaPodstron TO:
+         aktywnyIdp = $_GET['idp']
        W PRZECIWNYM RAZIE:
-         ustaw komunikat błędu filtra (pozostaw filtr = 'wszystkie')
+         ustaw kod odpowiedzi HTTP 404 (Not Found)
+         ustaw komunikat błędu 404 (nieznana podstrona)
 
-  5. JEŻELI metoda żądania HTTP === 'POST' TO:
-       pobierz $_POST['produkt'] oraz $_POST['ilosc']
-       zwaliduj oba pola jako tekstowy zapis liczby całkowitej (is_string + FILTER_VALIDATE_INT)
-       odszukaj produkt w tablicy $produkty po polu 'id'
-
-       JEŻELI walidacja typu nie powiodła się LUB produkt nie istnieje
-              LUB ilosc < 1 LUB ilosc > 5 LUB ilosc > produkt['stan'] TO:
-         ustaw kod odpowiedzi HTTP 400 (Bad Request)
-         ustaw komunikat błędu formularza (nie nadpisuj $_SESSION)
+  3. JEŻELI aktywnyIdp został ustalony TO:
+       zbuduj pełną ścieżkę: __DIR__ . '/' . $mapaPodstron[aktywnyIdp]['plik']
+       JEŻELI is_file(ścieżka) ORAZ is_readable(ścieżka) TO:
+         plikDoDolaczenia = ścieżka
        W PRZECIWNYM RAZIE:
-         zapisz w $_SESSION['ostatni_wybor'] = ['id' => produktId, 'ilosc' => ilosc]
-         wyślij nagłówek Location: lab4.php z kodem HTTP 303 (See Other)
-         zakończ skrypt (exit)
+         ustaw kod odpowiedzi HTTP 500 (Internal Server Error)
+         ustaw ogólny komunikat błędu 500 (bez ujawniania ścieżki systemowej)
 
-  6. Wygeneruj dokument HTML:
-       - dołącz nagłówek przez include (__DIR__ . '/includes/naglowek.php')
-       - wyświetl zapisany wybór z $_SESSION['ostatni_wybor'] (lub informację o jego braku)
-       - wyświetl formularz filtrowania (method="get")
-       - przejdź pętlą while po $produkty, filtruj, mapuj kategorię (switch) i stan (if/elseif/else)
-       - wyświetl formularz wyboru produktu (method="post") z opcjami ilości 1..5 (pętla for)
-       - wszystkie dynamiczne ciągi znaków escapuj przez htmlspecialchars(..., ENT_QUOTES, 'UTF-8')
+  4. Wygeneruj wspólny szablon HTML:
+       - w <title> wypisz tytuł widoku zabezpieczony przez htmlspecialchars(..., ENT_QUOTES, 'UTF-8')
+       - w <nav> wygeneruj linki z $mapaPodstron, oznaczając aktywny wpis atrybutem aria-current="page"
+       - w <main>:
+           JEŻELI plikDoDolaczenia !== null TO dołącz plik przez include
+           W PRZECIWNYM RAZIE wyświetl komunikat błędu (404 lub 500) i odnośnik do index.php
+       - w <footer> wypisz $idProjektu przez echo z htmlspecialchars()
 KONIEC
 ```
 
 ## Dokumentacja prób i wyników testów
 
-Weryfikację przeprowadzono w przeglądarce z otwartymi narzędziami deweloperskimi (zakładka **Network / Sieć** oraz **Elements / Inspektor**).
-
 | Próba | Kroki wykonania | Oczekiwany wynik | Rzeczywisty wynik |
 | :--- | :--- | :--- | :--- |
-| **1. Filtr GET** | 1. Wybrano kategorię *Książki* (`?kategoria=ksiazki`).<br>2. Wpisano w pasku adresu `?kategoria=nieznana` oraz `?kategoria[]=ksiazki`. | Dla `ksiazki` widoczne są tylko książki. Dla nieznanej wartości lub tablicy wyświetla się pełna lista oraz komunikat błędu. | **Zgodny.** Filtr `ksiazki` zwraca 2 książki (`GET 200`). Błędne parametry zwracają pełną listę (4 produkty) i komunikat błędu nad formularzem. |
-| **2. Poprawny POST i odświeżenie** | 1. Wybrano *Pan Tadeusz* (stan: 12) i ilość `2`, kliknięto *Zapisz wybór*.<br>2. Odświeżono stronę (`F5`) i zmieniono filtr GET na *Akcesoria*. | W Network widoczne `POST 303`, a następnie `GET 200`. Odświeżenie nie wysyła ponownie formularza. Wybór w sesji pozostaje widoczny po zmianie filtra. | **Zgodny.** W zakładce Network zarejestrowano `lab4.php` (`POST 303`) oraz przekierowanie `lab4.php` (`GET 200`). Po `F5` i zmianie filtra zapisany wybór nadal widnieje na górze strony. |
-| **3. Błędne wartości POST** | W Inspektorze zmodyfikowano formularz i wysłano kolejno: ilość `0`, `6`, `2.5`, `2abc`, brak pola `ilosc` (usunięty atrybut `name`), tablicę `ilosc[]` oraz nieistniejące ID produktu `999`. | Każda próba zwraca kod **HTTP 400**, wyświetla komunikat błędu przy formularzu POST i nie nadpisuje wcześniejszego poprawnego wyboru w sesji. | **Zgodny.** Wszystkie 7 przypadków brzegowych zwróciło w Network status `POST 400 Bad Request`, wyświetliło odpowiedni komunikat błędu, a w sesji pozostał *Pan Tadeusz (2 szt.)*. |
-| **4. Stan magazynowy** | Wybrano produkt *Lampka do czytania LED* (posiadający w katalogu `stan => 1`) oraz ilość `2` sztuki, po czym wysłano formularz. | Serwer odrzuca żądanie kodem **HTTP 400** (mimo że `2` mieści się w zakresie `1–5`) i informuje o przekroczeniu stanu magazynowego. | **Zgodny.** Żądanie odrzucone ze statusem `POST 400`, wyświetlono komunikat: *„Błąd: Brak wystarczającej liczby sztuk (dostępny stan: 1).”* |
-| **5. Odrębna sesja i tekst HTML** | 1. Otwarto `lab4.php` w oknie prywatnym (Incognito).<br>2. Tymczasowo ustawiono nazwę produktu na `<script>alert(1)</script>Test`, zapisano wybór, po czym przywrócono oryginalną nazwę. | W nowym oknie brak zapisanego wyboru. Tag `<script>` wyświetla się jako zwykły tekst bez wykonania kodu JS. | **Zgodny.** W trybie prywatnym wyświetlił się komunikat *„Brak zapisanego wyboru”*. Wstrzyknięty tag został wyescapowany przez `htmlspecialchars()` i wyświetlony jako tekst. |
-| **6. Strona po zmianie ścieżek** | Otwarto `index.html`, podstrony `html/produkt.html` i `html/kontakt.html` oraz przetestowano animacje jQuery i zapytanie do `status.php`. | Poprawne ładowanie stylów CSS, obrazków, nawigacji między stronami oraz działanie skryptów i żądania do `status.php`. | **Zgodny.** Wszystkie zasoby (`../css/`, `../js/`, `../img/`, `../vendor/`) ładują się bez błędów w konsoli, animacje i `status.php` działają poprawnie. |
+| **1. Adres domyślny i menu** | Otwarto `index.php` oraz `index.php?idp=`, a następnie kliknięto kolejno wszystkie odnośniki w nawigacji. | `index.php` i `index.php?idp=` ładują stronę główną (`HTTP 200`). Wszystkie linki otwierają właściwe treści we wspólnym szablonie i zmieniają `<title>` oraz `aria-current="page"`. | **Zgodny.** Strona główna otwiera się domyślnie, menu dynamicznie podświetla aktywną podstronę i zmienia tytuł karty w przeglądarce. |
+| **2. Nieznany lub tablicowy klucz** | Wpisano w pasku adresu `index.php?idp=nieznana` oraz `index.php?idp[]=filmy`. | Serwer zwraca kod **HTTP 404**, wyświetla komunikat błędu i link powrotny do strony głównej bez ostrzeżeń PHP. | **Zgodny.** W zakładce *Network* oba żądania mają status `404 Not Found`, brak ostrzeżeń `Warning`/`Notice`, widoczny link powrotny. |
+| **3. Próba podania ścieżki** | Wywołano adres `index.php?idp=..%2Fstatus.php` (próba *Path Traversal*). | Serwer odrzuca żądanie kodem **HTTP 404**, a zawartość `status.php` nie zostaje dołączona. | **Zgodny.** Ponieważ `../status.php` nie figuruje jako klucz w `$mapaPodstron`, zwrócono `HTTP 404` i komunikat błędu. |
+| **4. Brak pliku widoku** | Tymczasowo zmieniono nazwę pliku `html/filmy.html` na `html/filmy_bak.html`, otwarto `index.php?idp=filmy`, a po teście przywrócono nazwę pliku. | Serwer zwraca kod **HTTP 500** i wyświetla ogólny komunikat błędu bez ujawniania fizycznej ścieżki na dysku. | **Zgodny.** W panelu *Network* zarejestrowano status `500 Internal Server Error`, na ekranie wyświetlono bezpieczny komunikat bez ścieżki `C:\xampp\...`. |
+| **5. Strona główna i AJAX** | Otwarto `index.php`, sprawdzono działanie zegara, ciemnego motywu, animacji jQuery oraz zakładkę *Network* dla `status.php`. | Działają wszystkie style CSS, obrazy i skrypty JS. W panelu *Network* widoczne jest udane żądanie do `status.php` (`HTTP 200`), a na stronie pojawia się jego wynik. | **Zgodny.** Zasoby ładują się poprawnie, żądanie XHR/Fetch do `status.php` zwraca `200 OK` i wyświetla status na stronie głównej. |
+| **6. Katalog i sesja po migracji** | Przejście z menu do `lab4.php`, filtrowanie kategorii, zapis wyboru (`POST 303` -> `GET 200`), powrót na `index.php`, wejście w *Filmy* i ponowny powrót do `lab4.php`. | Przekierowanie PRG działa poprawnie (`303` -> `200`), a stan sesji `$_SESSION['ostatni_wybor']` utrzymuje się podczas nawigacji między `index.php` a `lab4.php`. | **Zgodny.** Po przejściu przez podstrony `index.php` i powrocie do `lab4.php` zapisany wcześniej produkt i jego ilość nadal są widoczne. |
+| **7. Filmy i układ mobilny** | Otwarto `index.php?idp=filmy`, uruchomiono wszystkie 3 odtwarzacze, sprawdzono nawigację klawiszem `Tab` oraz ustawiono szerokość widoku na `360 px` w DevTools. | Wszystkie 3 filmy odtwarzają się po kliknięciu (brak autoodtwarzania), linki są osiągalne z klawiatury, a przy `360 px` brak poziomego paska przewijania. | **Zgodny.** Filmy uruchamiają się poprawnie, Fokus `Tab` przechodzi po odtwarzaczach i linkach, a przy szerokości `360 px` układ mieści się w oknie bez scrolla poziomego. |

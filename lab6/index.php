@@ -1,56 +1,57 @@
 <?php
-    require_once __DIR__ . '/cfg.php';
-    $idProjektu="sklep-pilkarski-v1.5";
-    $mapaPodstron = [
-        'glowna' => [
-            'etykieta' => 'Strona główna',
-            'tytul' => 'Piłki - Strona Główna',
-            'plik' => 'html/glowna.html'
-        ],
-        'produkt' => [
-            'etykieta' => 'Produkt',
-            'tytul' => 'Piłki - Szczegóły produktu',
-            'plik' => 'html/produkt.html'
-        ],
-        'kontakt' => [
-            'etykieta' => 'Kontakt',
-            'tytul' => 'Piłki - Kontakt',
-            'plik' => 'html/kontakt.html'
-        ],
-        'filmy' => [
-            'etykieta' => 'Filmy',
-            'tytul' => 'Piłki - Filmy',
-            'plik' => 'html/filmy.html'
-        ]
-    ];
+    $idProjektu = "sklep-pilkarski-v1.5";
+    $pozycjeMenu = [];
     $aktywnyIdp = null;
-    $plikDoDolaczenia = null;
+    $trescPodstrony = null;
     $tytulWidoku = 'Piłki - Błąd';
     $kodBledu = 0;
     $komunikatBledu = '';
-    if (!isset($_GET['idp']) || $_GET['idp'] === ''){
-        $aktywnyIdp = 'glowna';
-    } elseif (is_string($_GET['idp']) && array_key_exists($_GET['idp'], $mapaPodstron)){
-        $aktywnyIdp = $_GET['idp'];
-    } else {
-        http_response_code(404);
-        $kodBledu = 404;
-        $tytulWidoku = '404 - Nie znaleziono podstrony';
-        $komunikatBledu = 'Wybrana podstrona nie istnieje.';
-    }
-    if($aktywnyIdp !== null){
-        $wybranyWpis = $mapaPodstron[$aktywnyIdp];
-        $tytulWidoku = $wybranyWpis['tytul'];
-        $sciezkaPliku = __DIR__ . '/' . $wybranyWpis['plik'];
-        if(is_file($sciezkaPliku) && is_readable($sciezkaPliku)){
-            $plikDoDolaczenia = $sciezkaPliku;
+
+    try {
+        require_once __DIR__ . '/cfg.php';
+        require_once __DIR__ . '/showpage.php';
+
+        $stmtMenu = $pdo->query('SELECT alias, page_title FROM page_list WHERE status = 1 ORDER BY id');
+        $pozycjeMenu = $stmtMenu->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!isset($_GET['idp']) || $_GET['idp'] === '') {
+            $aktywnyIdp = 'glowna';
+        } elseif (is_string($_GET['idp']) && preg_match('/^[a-z0-9-]{1,20}$/', $_GET['idp']) === 1) {
+            $aktywnyIdp = $_GET['idp'];
+        } else {
+            http_response_code(404);
+            $kodBledu = 404;
+            $tytulWidoku = '404 - Nie znaleziono podstrony';
+            $komunikatBledu = 'Wybrana podstrona nie istnieje.';
         }
-        else {
-            http_response_code(500);
-            $kodBledu = 500;
-            $tytulWidoku = '500 - Błąd serwera';
-            $komunikatBledu = 'Wystąpił wewnętrzny błąd serwera podczas ładowania widoku.';
+
+        if ($aktywnyIdp !== null) {
+            $rekordStrony = PokazPodstrone($pdo, $aktywnyIdp);
+            if ($rekordStrony !== null) {
+                $tytulWidoku = $rekordStrony['page_title'];
+                $trescPodstrony = $rekordStrony['page_content'];
+            } else {
+                http_response_code(404);
+                $kodBledu = 404;
+                $tytulWidoku = '404 - Nie znaleziono podstrony';
+                $komunikatBledu = 'Wybrana podstrona nie istnieje.';
+            }
         }
+    } catch (Throwable $e) {
+        $katalogLogow = __DIR__ . '/logs';
+        if (!is_dir($katalogLogow)) {
+            mkdir($katalogLogow, 0750, true);
+        }
+        $wpisLogu = '[' . date('Y-m-d H:i:s') . '] ' . get_class($e) . ': ' . $e->getMessage() . PHP_EOL;
+        error_log($wpisLogu, 3, $katalogLogow . '/app.log');
+
+        http_response_code(500);
+        $kodBledu = 500;
+        $pozycjeMenu = [];
+        $aktywnyIdp = null;
+        $trescPodstrony = null;
+        $tytulWidoku = '500 - Błąd serwera';
+        $komunikatBledu = 'Wystąpił wewnętrzny błąd serwera. Spróbuj ponownie później.';
     }
 ?>
 
@@ -80,10 +81,11 @@
         <nav>
             <ul>
                 <?php
-                foreach($mapaPodstron as $klucz => $dane){
-                    $link = ($klucz === 'glowna') ? 'index.php' : 'index.php?idp=' . $klucz;
-                    $aktywny = ($aktywnyIdp === $klucz && $kodBledu === 0) ? ' aria-current="page"' : '';
-                    $etykieta = htmlspecialchars($dane['etykieta'],ENT_QUOTES, 'UTF-8');
+                foreach($pozycjeMenu as $pozycja){
+                    $alias= $pozycja['alias'];
+                    $link = ($alias === 'glowna') ? 'index.php' : 'index.php?idp=' . $alias;
+                    $aktywny = ($aktywnyIdp === $alias && $kodBledu === 0) ? ' aria-current="page"' : '';
+                    $etykieta = htmlspecialchars($pozycja['page_title'],ENT_QUOTES, 'UTF-8');
                     echo "<li><a href=\"$link\"$aktywny>$etykieta</a></li>";
                     }
                 ?>
@@ -94,14 +96,14 @@
         </div>
     </header>
     <main>
-        <?php if ($plikDoDolaczenia !== null):?>
-            <?php include $plikDoDolaczenia; ?>
+        <?php if ($trescPodstrony !== null ): ?>
+            <?php echo $trescPodstrony; ?>
         <?php else: ?>
             <section>
-                <h2>Błąd <?php echo $kodBledu;?></h2>
-                <p><?php echo htmlspecialchars($komunikatBledu, ENT_QUOTES, 'UTF-8'); ?></p>    
+                <h2>Błąd <?php echo $kodBledu; ?></h2>
+                <p><?php echo htmlspecialchars($komunikatBledu, ENT_QUOTES, 'UTF-8'); ?></p>
                 <p><a href="index.php">Powrót do strony głównej</a></p>
-        </section>
+            </section>
         <?php endif; ?>
     </main>
     <footer>
